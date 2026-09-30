@@ -3,39 +3,53 @@ name: Build MELORA APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Download repository files
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2. Extract the MELORA Android project
       - name: Extract MELORA project
-        run: unzip -o MELORA-APK-BUILD.zip
+        run: |
+          unzip -o MELORA-APK-BUILD.zip
 
+      # 3. Install Java 17
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
+      # 4. Set up Android SDK
       - name: Set up Android
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
+      # 5. Install required Android SDK packages
       - name: Install Android SDK
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
+      # 6. Set up Gradle
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # 7. Build MELORA Debug APK
       - name: Build APK
-        run: gradle :app:assembleDebug
+        run: |
+          gradle :app:assembleDebug --no-daemon
 
+      # 8. Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MELORA-APK
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
