@@ -1,194 +1,22 @@
-name: Build MELORA APK
-
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK packages
-        run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-
-      - name: Set up Gradle 8.7
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.7'
-
-      - name: Build debug APK
-        run: gradle --no-daemon clean assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: MELORA-debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-    
-
-    private GradientDrawable bg(int color, float radius) {
-        GradientDrawable d = new GradientDrawable();
-        d.setColor(color);
-        d.setCornerRadius(dp(radius));
-        return d;
-    }
-
-    private TextView button(String label) {
-        TextView b = text(label, 14, Color.WHITE);
-        b.setGravity(Gravity.CENTER);
-        b.setBackground(bg(Color.rgb(38, 38, 48), 18));
-        b.setPadding(dp(18), 0, dp(18), 0);
-        return b;
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        final int bg = Color.rgb(11, 11, 16);
-        final int card = Color.rgb(24, 24, 32);
-        final int white = Color.WHITE;
-        final int muted = Color.rgb(170, 170, 184);
-        final int purple = Color.rgb(190, 105, 255);
-
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(18), dp(16), dp(18), dp(12));
-        root.setBackgroundColor(bg);
-
-        TextView title = text("MELORA", 30, white);
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        root.addView(title, new LinearLayout.LayoutParams(-1, dp(52)));
-
-        TextView subtitle = text("Music that feels like yours.", 15, muted);
-        root.addView(subtitle, new LinearLayout.LayoutParams(-1, dp(32)));
-
-        LinearLayout search = new LinearLayout(this);
-        search.setGravity(Gravity.CENTER_VERTICAL);
-        search.setPadding(dp(16), 0, dp(12), 0);
-        search.setBackground(bg(Color.rgb(29, 29, 38), 22));
-
-        TextView searchText = text("⌕   Search songs, artists or albums", 15, muted);
-        search.addView(searchText, new LinearLayout.LayoutParams(0, dp(50), 1));
-        TextView go = button("Search");
-        search.addView(go, new LinearLayout.LayoutParams(dp(82), dp(40)));
-        root.addView(search, new LinearLayout.LayoutParams(-1, dp(52)));
-
-        TextView section = text("Quick access", 21, white);
-        section.setTypeface(null, android.graphics.Typeface.BOLD);
-        section.setPadding(0, dp(22), 0, dp(8));
-        root.addView(section, new LinearLayout.LayoutParams(-1, dp(58)));
-
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-
-        String[] actions = {"♡  Favorites", "◉  Playlists", "◷  Recent"};
-        for (String a : actions) {
-            TextView v = button(a);
-            LinearLayout.LayoutParams p =
-                    new LinearLayout.LayoutParams(0, dp(48), 1);
-            p.setMargins(dp(3), 0, dp(3), 0);
-            row.addView(v, p);
-        }
-        root.addView(row, new LinearLayout.LayoutParams(-1, dp(54)));
-
-        TextView made = text("Made for you", 21, white);
-        made.setTypeface(null, android.graphics.Typeface.BOLD);
-        made.setPadding(0, dp(22), 0, dp(8));
-        root.addView(made, new LinearLayout.LayoutParams(-1, dp(58)));
-
-        LinearLayout playlist = new LinearLayout(this);
-        playlist.setOrientation(LinearLayout.VERTICAL);
-        playlist.setPadding(dp(16), dp(12), dp(16), dp(12));
-        playlist.setBackground(bg(card, 20));
-
-        TextView p1 = text("MELORA MIX", 18, white);
-        p1.setTypeface(null, android.graphics.Typeface.BOLD);
-        playlist.addView(p1, new LinearLayout.LayoutParams(-1, dp(34)));
-
-        TextView p2 = text("A personal mix for your mood", 14, muted);
-        playlist.addView(p2, new LinearLayout.LayoutParams(-1, dp(30)));
-
-        TextView play = button("▶  Play");
-        play.setBackground(bg(Color.rgb(120, 55, 180), 20));
-        play.setOnClickListener(v ->
-                Toast.makeText(MainActivity.this,
-                        "MELORA MIX is ready to play",
-                        Toast.LENGTH_SHORT).show());
-        LinearLayout.LayoutParams playParams =
-                new LinearLayout.LayoutParams(dp(110), dp(42));
-        playParams.topMargin = dp(8);
-        playlist.addView(play, playParams);
-
-        root.addView(playlist, new LinearLayout.LayoutParams(-1, dp(136)));
-
-        TextView now = text("Now playing", 21, white);
-        now.setTypeface(null, android.graphics.Typeface.BOLD);
-        now.setPadding(0, dp(22), 0, dp(8));
-        root.addView(now, new LinearLayout.LayoutParams(-1, dp(58)));
-
-        LinearLayout player = new LinearLayout(this);
-        player.setGravity(Gravity.CENTER_VERTICAL);
-        player.setPadding(dp(16), dp(10), dp(16), dp(10));
-        player.setBackground(bg(Color.rgb(30, 25, 39), 22));
-
-        LinearLayout names = new LinearLayout(this);
-        names.setOrientation(LinearLayout.VERTICAL);
-        TextView song = text("Choose a song", 17, white);
-        song.setTypeface(null, android.graphics.Typeface.BOLD);
-        TextView artist = text("MELORA", 13, muted);
-        names.addView(song, new LinearLayout.LayoutParams(-1, dp(28)));
-        names.addView(artist, new LinearLayout.LayoutParams(-1, dp(24)));
-
-        player.addView(names, new LinearLayout.LayoutParams(0, dp(58), 1));
-
-        TextView previous = button("◀");
-        TextView playMain = button("▶");
-        TextView next = button("▶");
-        playMain.setBackground(bg(purple, 24));
-
-        player.addView(previous, new LinearLayout.LayoutParams(dp(46), dp(46)));
-        LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(dp(54), dp(46));
-        pp.setMargins(dp(6), 0, dp(6), 0);
-        player.addView(playMain, pp);
-        player.addView(next, new LinearLayout.LayoutParams(dp(46), dp(46)));
-
-        playMain.setOnClickListener(v ->
-                Toast.makeText(MainActivity.this,
-                        "Add your music player here",
-                        Toast.LENGTH_SHORT).show());
-
-        LinearLayout.LayoutParams playerParams =
-                new LinearLayout.LayoutParams(-1, dp(78));
-        playerParams.weight = 1;
-        root.addView(player, playerParams);
-
-        TextView nav = text("⌂  Home        ♫  Library        ⚙  Settings", 14, muted);
-        nav.setGravity(Gravity.CENTER);
-        nav.setPadding(0, dp(8), 0, 0);
-        root.addView(nav, new LinearLayout.LayoutParams(-1, dp(48)));
-
-        setContentView(root);
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
     }
 }
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "MELORA"
+include(":app")
 plugins {
     id 'com.android.application' version '8.6.1' apply false
 }
@@ -219,14 +47,11 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles(
-                getDefaultProguardFile('proguard-android-optimize.txt'),
-                'proguard-rules.pro'
-            )
         }
     }
 }
 <?xml version="1.0" encoding="utf-8"?>
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
@@ -240,8 +65,12 @@ android {
             android:exported="true">
 
             <intent-filter>
+
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+
+                <category
+                    android:name="android.intent.category.LAUNCHER" />
+
             </intent-filter>
 
         </activity>
@@ -250,16 +79,24 @@ android {
 
 </manifest>
 <?xml version="1.0" encoding="utf-8"?>
+
 <resources>
 
-    <style name="AppTheme"
+    <style
+        name="AppTheme"
         parent="android:style/Theme.Material.NoActionBar">
 
         <item name="android:fontFamily">sans</item>
+
         <item name="android:windowLightStatusBar">false</item>
+
         <item name="android:statusBarColor">#09090B</item>
+
         <item name="android:navigationBarColor">#09090B</item>
+
         <item name="android:colorAccent">#A855F7</item>
+
+        <item name="android:windowActionModeOverlay">true</item>
 
     </style>
 
@@ -283,7 +120,7 @@ public class MainActivity extends Activity {
 
     private LinearLayout root;
     private LinearLayout content;
-    private TextView title;
+
     private TextView nowPlayingTitle;
     private TextView nowPlayingArtist;
     private Button playButton;
@@ -296,71 +133,92 @@ public class MainActivity extends Activity {
     private final int WHITE = Color.WHITE;
     private final int GRAY = Color.rgb(161, 161, 170);
     private final int PURPLE = Color.rgb(168, 85, 247);
-    private final int PINK = Color.rgb(236, 72, 153);
 
     private final List<Song> songs = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
 
         createSongs();
+
         buildApp();
+
         showHome();
     }
 
     private void createSongs() {
 
-        songs.add(new Song(
-                "Midnight Dreams",
-                "MELORA",
-                "Electronic"
-        ));
+        songs.add(
+                new Song(
+                        "Midnight Dreams",
+                        "MELORA",
+                        "Electronic"
+                )
+        );
 
-        songs.add(new Song(
-                "Neon Hearts",
-                "Luna",
-                "Pop"
-        ));
+        songs.add(
+                new Song(
+                        "Neon Hearts",
+                        "Luna",
+                        "Pop"
+                )
+        );
 
-        songs.add(new Song(
-                "Lost In Echo",
-                "Aria",
-                "Ambient"
-        ));
+        songs.add(
+                new Song(
+                        "Lost In Echo",
+                        "Aria",
+                        "Ambient"
+                )
+        );
 
-        songs.add(new Song(
-                "Afterglow",
-                "Nova",
-                "Chill"
-        ));
+        songs.add(
+                new Song(
+                        "Afterglow",
+                        "Nova",
+                        "Chill"
+                )
+        );
 
-        songs.add(new Song(
-                "Ocean Lights",
-                "MELORA",
-                "Electronic"
-        ));
+        songs.add(
+                new Song(
+                        "Ocean Lights",
+                        "MELORA",
+                        "Electronic"
+                )
+        );
     }
 
     private void buildApp() {
 
         root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
+
+        root.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
         root.setBackgroundColor(BG);
 
         setContentView(root);
 
         createTopBar();
 
-        content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
+        ScrollView scroll = new ScrollView(this);
 
-        ScrollView scrollView = new ScrollView(this);
-        scrollView.setFillViewport(true);
-        scrollView.addView(content);
+        scroll.setFillViewport(true);
+
+        content = new LinearLayout(this);
+
+        content.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        scroll.addView(content);
 
         root.addView(
-                scrollView,
+                scroll,
                 new LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         0,
@@ -374,8 +232,17 @@ public class MainActivity extends Activity {
     private void createTopBar() {
 
         LinearLayout bar = new LinearLayout(this);
-        bar.setGravity(Gravity.CENTER_VERTICAL);
-        bar.setPadding(22, 22, 22, 12);
+
+        bar.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        bar.setPadding(
+                22,
+                18,
+                22,
+                10
+        );
 
         TextView logo = text(
                 "MELORA",
@@ -384,28 +251,34 @@ public class MainActivity extends Activity {
                 true
         );
 
-        LinearLayout.LayoutParams logoParams =
+        bar.addView(
+                logo,
                 new LinearLayout.LayoutParams(
                         0,
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         1
-                );
-
-        bar.addView(logo, logoParams);
+                )
+        );
 
         TextView search = text(
                 "⌕",
-                30,
+                32,
                 WHITE,
                 false
         );
 
         search.setGravity(Gravity.CENTER);
-        search.setOnClickListener(v -> showSearch());
+
+        search.setOnClickListener(
+                v -> showSearch()
+        );
 
         bar.addView(
                 search,
-                new LinearLayout.LayoutParams(55, 55)
+                new LinearLayout.LayoutParams(
+                        55,
+                        55
+                )
         );
 
         root.addView(bar);
@@ -414,15 +287,47 @@ public class MainActivity extends Activity {
     private void createBottomNavigation() {
 
         LinearLayout nav = new LinearLayout(this);
-        nav.setOrientation(LinearLayout.HORIZONTAL);
-        nav.setGravity(Gravity.CENTER);
-        nav.setPadding(8, 8, 8, 10);
-        nav.setBackgroundColor(Color.rgb(15, 15, 18));
 
-        addNavButton(nav, "⌂", "Home", v -> showHome());
-        addNavButton(nav, "♫", "Library", v -> showLibrary());
-        addNavButton(nav, "♡", "Liked", v -> showLiked());
-        addNavButton(nav, "☰", "Playlists", v -> showPlaylists());
+        nav.setGravity(Gravity.CENTER);
+
+        nav.setPadding(
+                5,
+                5,
+                5,
+                8
+        );
+
+        nav.setBackgroundColor(
+                Color.rgb(15, 15, 18)
+        );
+
+        addNav(
+                nav,
+                "⌂",
+                "Home",
+                v -> showHome()
+        );
+
+        addNav(
+                nav,
+                "♫",
+                "Library",
+                v -> showLibrary()
+        );
+
+        addNav(
+                nav,
+                "♡",
+                "Liked",
+                v -> showLiked()
+        );
+
+        addNav(
+                nav,
+                "☰",
+                "Playlists",
+                v -> showPlaylists()
+        );
 
         root.addView(
                 nav,
@@ -433,7 +338,7 @@ public class MainActivity extends Activity {
         );
     }
 
-    private void addNavButton(
+    private void addNav(
             LinearLayout nav,
             String icon,
             String name,
@@ -441,25 +346,29 @@ public class MainActivity extends Activity {
     ) {
 
         LinearLayout item = new LinearLayout(this);
-        item.setOrientation(LinearLayout.VERTICAL);
+
+        item.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
         item.setGravity(Gravity.CENTER);
 
-        TextView iconView = text(
+        TextView i = text(
                 icon,
                 23,
                 WHITE,
                 false
         );
 
-        TextView label = text(
+        TextView t = text(
                 name,
                 11,
                 GRAY,
                 false
         );
 
-        item.addView(iconView);
-        item.addView(label);
+        item.addView(i);
+        item.addView(t);
 
         item.setOnClickListener(listener);
 
@@ -477,86 +386,98 @@ public class MainActivity extends Activity {
 
         clearContent();
 
-        title = text(
-                "Good evening",
-                30,
-                WHITE,
-                true
+        content.addView(
+                text(
+                        "Good evening",
+                        30,
+                        WHITE,
+                        true
+                ),
+                margins(24, 10, 24, 5)
         );
 
         content.addView(
-                title,
-                marginParams(24, 10, 24, 18)
+                text(
+                        "Find your sound.",
+                        16,
+                        GRAY,
+                        false
+                ),
+                margins(24, 0, 24, 25)
         );
 
-        TextView subtitle = text(
-                "Find your sound.",
-                16,
-                GRAY,
-                false
-        );
-
-        content.addView(
-                subtitle,
-                marginParams(24, 0, 24, 25)
-        );
-
-        addSectionTitle("MELORA MIX");
+        section("MELORA MIX");
 
         LinearLayout mix = card();
 
-        TextView mixTitle = text(
-                "Your personalized mix",
-                21,
-                WHITE,
-                true
-        );
-
-        TextView mixDescription = text(
-                "A fresh collection made for your mood.",
-                14,
-                GRAY,
-                false
-        );
-
-        Button playMix = roundedButton("▶  PLAY MIX");
-
-        playMix.setOnClickListener(v -> playSong(songs.get(0)));
-
         mix.addView(
-                mixTitle,
-                marginParams(20, 18, 20, 5)
+                text(
+                        "Your personalized mix",
+                        21,
+                        WHITE,
+                        true
+                ),
+                margins(20, 18, 20, 5)
         );
 
         mix.addView(
-                mixDescription,
-                marginParams(20, 0, 20, 18)
+                text(
+                        "A fresh collection made for your mood.",
+                        14,
+                        GRAY,
+                        false
+                ),
+                margins(20, 0, 20, 18)
+        );
+
+        Button play = button("▶  PLAY MIX");
+
+        play.setOnClickListener(
+                v -> playSong(songs.get(0))
         );
 
         mix.addView(
-                playMix,
-                marginParams(20, 0, 20, 18)
+                play,
+                margins(20, 0, 20, 18)
         );
 
         content.addView(
                 mix,
-                marginParams(20, 0, 20, 25)
+                margins(20, 0, 20, 25)
         );
 
-        addSectionTitle("QUICK PICKS");
+        section("QUICK PICKS");
 
         for (int i = 0; i < 3; i++) {
-            addSongCard(songs.get(i));
+            songCard(songs.get(i));
         }
 
-        addSectionTitle("YOUR LIBRARY");
+        section("YOUR LIBRARY");
 
         LinearLayout shortcuts = new LinearLayout(this);
-        shortcuts.setPadding(18, 0, 18, 20);
 
-        addShortcut(shortcuts, "♡", "Liked", v -> showLiked());
-        addShortcut(shortcuts, "♫", "Songs", v -> showLibrary());
-        addShortcut(shortcuts, "☰", "Playlists", v -> showPlaylists());
+        shortcuts.setGravity(Gravity.CENTER);
+
+        addShortcut(
+                shortcuts,
+                "♡",
+                "Liked",
+                v -> showLiked()
+        );
+
+        addShortcut(
+                shortcuts,
+                "♫",
+                "Songs",
+                v -> showLibrary()
+        );
+
+        addShortcut(
+                shortcuts,
+                "☰",
+                "Playlists",
+                v -> showPlaylists()
+        );
 
         content.addView(shortcuts);
     }
@@ -565,15 +486,15 @@ public class MainActivity extends Activity {
 
         clearContent();
 
-        addPageHeader(
+        header(
                 "Your Library",
                 "Everything you've saved."
         );
 
-        addSectionTitle("RECENTLY PLAYED");
+        section("RECENTLY PLAYED");
 
         for (Song song : songs) {
-            addSongCard(song);
+            songCard(song);
         }
     }
 
@@ -581,121 +502,109 @@ public class MainActivity extends Activity {
 
         clearContent();
 
-        addPageHeader(
+        header(
                 "Liked Songs",
                 "Your favorite music."
         );
 
-        addSongCard(songs.get(1));
-        addSongCard(songs.get(3));
+        songCard(songs.get(1));
+
+        songCard(songs.get(3));
     }
 
     private void showPlaylists() {
 
         clearContent();
 
-        addPageHeader(
+        header(
                 "Playlists",
                 "Organize your music."
         );
 
-        LinearLayout create = card();
-
-        TextView icon = text(
-                "+",
-                35,
-                PURPLE,
-                true
+        playlist(
+                "Late Night",
+                "12 songs"
         );
 
-        TextView name = text(
-                "Create playlist",
-                18,
-                WHITE,
-                true
+        playlist(
+                "Chill Mode",
+                "18 songs"
         );
 
-        create.addView(
-                icon,
-                marginParams(20, 15, 20, 5)
+        playlist(
+                "Favorites",
+                "24 songs"
         );
-
-        create.addView(
-                name,
-                marginParams(20, 0, 20, 18)
-        );
-
-        create.setOnClickListener(
-                v -> Toast.makeText(
-                        this,
-                        "Playlist creation coming soon",
-                        Toast.LENGTH_SHORT
-                ).show()
-        );
-
-        content.addView(
-                create,
-                marginParams(20, 0, 20, 20)
-        );
-
-        addSectionTitle("YOUR PLAYLISTS");
-
-        addPlaylist("Late Night", "12 songs");
-        addPlaylist("Chill Mode", "18 songs");
-        addPlaylist("Favorites", "24 songs");
     }
 
     private void showSearch() {
 
         clearContent();
 
-        addPageHeader(
+        header(
                 "Search",
                 "Find your next favorite song."
         );
 
-        EditText input = new EditText(this);
+        EditText search = new EditText(this);
 
-        input.setHint("Search artists, songs...");
-        input.setHintTextColor(GRAY);
-        input.setTextColor(WHITE);
-        input.setTextSize(16);
-        input.setSingleLine(true);
-        input.setPadding(18, 0, 18, 0);
-
-        GradientDrawable bg = roundedBackground(
-                CARD2,
-                18
+        search.setHint(
+                "Search songs or artists..."
         );
 
-        input.setBackground(bg);
+        search.setHintTextColor(GRAY);
+
+        search.setTextColor(WHITE);
+
+        search.setSingleLine(true);
+
+        search.setTextSize(16);
+
+        search.setPadding(
+                18,
+                0,
+                18,
+                0
+        );
+
+        search.setBackground(
+                rounded(
+                        CARD2,
+                        18
+                )
+        );
 
         content.addView(
-                input,
-                marginParams(20, 5, 20, 15)
+                search,
+                margins(20, 5, 20, 15)
         );
 
-        Button searchButton = roundedButton("SEARCH");
+        Button searchButton =
+                button("SEARCH");
 
         content.addView(
                 searchButton,
-                marginParams(20, 0, 20, 25)
+                margins(20, 0, 20, 20)
         );
 
-        LinearLayout results = new LinearLayout(this);
-        results.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout results =
+                new LinearLayout(this);
+
+        results.setOrientation(
+                LinearLayout.VERTICAL
+        );
 
         content.addView(results);
 
         searchButton.setOnClickListener(
-                v -> performSearch(
-                        input.getText().toString(),
+                v -> searchSongs(
+                        search.getText().toString(),
                         results
                 )
         );
     }
 
-    private void performSearch(
+    private void searchSongs(
             String query,
             LinearLayout results
     ) {
@@ -704,16 +613,14 @@ public class MainActivity extends Activity {
 
         if (query.trim().isEmpty()) {
 
-            TextView empty = text(
-                    "Type something to search.",
-                    15,
-                    GRAY,
-                    false
-            );
-
             results.addView(
-                    empty,
-                    marginParams(20, 10, 20, 10)
+                    text(
+                            "Type something to search.",
+                            15,
+                            GRAY,
+                            false
+                    ),
+                    margins(20, 10, 20, 10)
             );
 
             return;
@@ -723,23 +630,26 @@ public class MainActivity extends Activity {
 
         for (Song song : songs) {
 
+            String q =
+                    query.toLowerCase();
+
             if (
-                    song.title.toLowerCase().contains(
-                            query.toLowerCase()
-                    )
+                    song.title
+                            .toLowerCase()
+                            .contains(q)
                     ||
-                    song.artist.toLowerCase().contains(
-                            query.toLowerCase()
-                    )
+                    song.artist
+                            .toLowerCase()
+                            .contains(q)
                     ||
-                    song.genre.toLowerCase().contains(
-                            query.toLowerCase()
-                    )
+                    song.genre
+                            .toLowerCase()
+                            .contains(q)
             ) {
 
                 found = true;
 
-                addSongCardTo(
+                addSongTo(
                         song,
                         results
                 );
@@ -748,40 +658,51 @@ public class MainActivity extends Activity {
 
         if (!found) {
 
-            TextView empty = text(
-                    "No results found.",
-                    15,
-                    GRAY,
-                    false
-            );
-
             results.addView(
-                    empty,
-                    marginParams(20, 10, 20, 10)
+                    text(
+                            "No results found.",
+                            15,
+                            GRAY,
+                            false
+                    ),
+                    margins(20, 10, 20, 10)
             );
         }
     }
 
-    private void addSongCard(Song song) {
+    private void songCard(Song song) {
 
-        addSongCardTo(
+        addSongTo(
                 song,
                 content
         );
     }
 
-    private void addSongCardTo(
+    private void addSongTo(
             Song song,
             LinearLayout parent
     ) {
 
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.HORIZONTAL);
-        card.setGravity(Gravity.CENTER_VERTICAL);
-        card.setPadding(14, 12, 14, 12);
+        LinearLayout card =
+                new LinearLayout(this);
+
+        card.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
+
+        card.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        card.setPadding(
+                14,
+                12,
+                14,
+                12
+        );
 
         card.setBackground(
-                roundedBackground(
+                rounded(
                         CARD,
                         18
                 )
@@ -794,49 +715,60 @@ public class MainActivity extends Activity {
                 true
         );
 
-        artwork.setGravity(Gravity.CENTER);
+        artwork.setGravity(
+                Gravity.CENTER
+        );
 
-        GradientDrawable artworkBg =
-                roundedBackground(
+        artwork.setBackground(
+                rounded(
                         PURPLE,
                         16
-                );
-
-        artwork.setBackground(artworkBg);
+                )
+        );
 
         card.addView(
                 artwork,
-                new LinearLayout.LayoutParams(58, 58)
+                new LinearLayout.LayoutParams(
+                        58,
+                        58
+                )
         );
 
-        LinearLayout details = new LinearLayout(this);
-        details.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout details =
+                new LinearLayout(this);
 
-        TextView songTitle = text(
-                song.title,
-                17,
-                WHITE,
-                true
+        details.setOrientation(
+                LinearLayout.VERTICAL
         );
 
-        TextView artist = text(
-                song.artist + " • " + song.genre,
-                13,
-                GRAY,
-                false
+        details.addView(
+                text(
+                        song.title,
+                        17,
+                        WHITE,
+                        true
+                )
         );
 
-        details.addView(songTitle);
-        details.addView(artist);
+        details.addView(
+                text(
+                        song.artist +
+                                " • " +
+                                song.genre,
+                        13,
+                        GRAY,
+                        false
+                )
+        );
 
-        LinearLayout.LayoutParams detailParams =
+        LinearLayout.LayoutParams dp =
                 new LinearLayout.LayoutParams(
                         0,
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         1
                 );
 
-        detailParams.setMargins(
+        dp.setMargins(
                 15,
                 0,
                 8,
@@ -845,7 +777,7 @@ public class MainActivity extends Activity {
 
         card.addView(
                 details,
-                detailParams
+                dp
         );
 
         TextView play = text(
@@ -855,7 +787,9 @@ public class MainActivity extends Activity {
                 true
         );
 
-        play.setGravity(Gravity.CENTER);
+        play.setGravity(
+                Gravity.CENTER
+        );
 
         card.addView(
                 play,
@@ -869,60 +803,55 @@ public class MainActivity extends Activity {
                 v -> playSong(song);
 
         card.setOnClickListener(listener);
+
         play.setOnClickListener(listener);
 
         parent.addView(
                 card,
-                marginParams(20, 0, 20, 12)
+                margins(20, 0, 20, 12)
         );
     }
 
-    private void addPlaylist(
+    private void playlist(
             String name,
             String count
     ) {
 
         LinearLayout item = card();
 
-        TextView icon = text(
-                "♫",
-                28,
-                PURPLE,
-                true
-        );
-
-        TextView title = text(
-                name,
-                17,
-                WHITE,
-                true
-        );
-
-        TextView songs = text(
-                count,
-                13,
-                GRAY,
-                false
+        item.addView(
+                text(
+                        "♫",
+                        30,
+                        PURPLE,
+                        true
+                ),
+                margins(20, 15, 20, 5)
         );
 
         item.addView(
-                icon,
-                marginParams(20, 15, 20, 5)
+                text(
+                        name,
+                        18,
+                        WHITE,
+                        true
+                ),
+                margins(20, 0, 20, 3)
         );
 
         item.addView(
-                title,
-                marginParams(20, 0, 20, 3)
-        );
-
-        item.addView(
-                songs,
-                marginParams(20, 0, 20, 15)
+                text(
+                        count,
+                        13,
+                        GRAY,
+                        false
+                ),
+                margins(20, 0, 20, 15)
         );
 
         content.addView(
                 item,
-                marginParams(20, 0, 20, 12)
+                margins(20, 0, 20, 12)
         );
     }
 
@@ -933,29 +862,36 @@ public class MainActivity extends Activity {
             View.OnClickListener listener
     ) {
 
-        LinearLayout item = new LinearLayout(this);
-        item.setOrientation(LinearLayout.VERTICAL);
-        item.setGravity(Gravity.CENTER);
-        item.setPadding(5, 10, 5, 10);
+        LinearLayout item =
+                new LinearLayout(this);
 
-        TextView iconView = text(
-                icon,
-                27,
-                WHITE,
-                true
+        item.setOrientation(
+                LinearLayout.VERTICAL
         );
 
-        TextView label = text(
-                name,
-                12,
-                GRAY,
-                false
+        item.setGravity(
+                Gravity.CENTER
         );
-
-        item.addView(iconView);
-        item.addView(label);
 
         item.setOnClickListener(listener);
+
+        item.addView(
+                text(
+                        icon,
+                        27,
+                        WHITE,
+                        true
+                )
+        );
+
+        item.addView(
+                text(
+                        name,
+                        12,
+                        GRAY,
+                        false
+                )
+        );
 
         parent.addView(
                 item,
@@ -967,61 +903,61 @@ public class MainActivity extends Activity {
         );
     }
 
-    private void addPageHeader(
-            String heading,
-            String description
+    private void header(
+            String title,
+            String subtitle
     ) {
 
         content.addView(
                 text(
-                        heading,
+                        title,
                         30,
                         WHITE,
                         true
                 ),
-                marginParams(20, 15, 20, 5)
+                margins(20, 15, 20, 5)
         );
 
         content.addView(
                 text(
-                        description,
+                        subtitle,
                         15,
                         GRAY,
                         false
                 ),
-                marginParams(20, 0, 20, 25)
+                margins(20, 0, 20, 25)
         );
     }
 
-    private void addSectionTitle(
-            String value
-    ) {
+    private void section(String title) {
 
-        TextView section = text(
-                value,
-                13,
-                GRAY,
-                true
-        );
+        TextView view =
+                text(
+                        title,
+                        13,
+                        GRAY,
+                        true
+                );
 
-        section.setLetterSpacing(0.12f);
+        view.setLetterSpacing(0.12f);
 
         content.addView(
-                section,
-                marginParams(20, 10, 20, 12)
+                view,
+                margins(20, 10, 20, 12)
         );
     }
 
     private LinearLayout card() {
 
-        LinearLayout layout = new LinearLayout(this);
+        LinearLayout layout =
+                new LinearLayout(this);
 
         layout.setOrientation(
                 LinearLayout.VERTICAL
         );
 
         layout.setBackground(
-                roundedBackground(
+                rounded(
                         CARD,
                         20
                 )
@@ -1030,50 +966,34 @@ public class MainActivity extends Activity {
         return layout;
     }
 
-    private Button roundedButton(
+    private Button button(
             String value
     ) {
 
-        Button button = new Button(this);
+        Button button =
+                new Button(this);
 
         button.setText(value);
+
         button.setTextColor(WHITE);
+
         button.setTextSize(13);
+
+        button.setAllCaps(false);
+
         button.setTypeface(
                 Typeface.DEFAULT,
                 Typeface.BOLD
         );
 
-        button.setAllCaps(false);
-        button.setPadding(
-                22,
-                8,
-                22,
-                8
-        );
-
         button.setBackground(
-                roundedBackground(
+                rounded(
                         PURPLE,
                         30
                 )
         );
 
         return button;
-    }
-
-    private GradientDrawable roundedBackground(
-            int color,
-            int radius
-    ) {
-
-        GradientDrawable drawable =
-                new GradientDrawable();
-
-        drawable.setColor(color);
-        drawable.setCornerRadius(radius);
-
-        return drawable;
     }
 
     private TextView text(
@@ -1083,13 +1003,17 @@ public class MainActivity extends Activity {
             boolean bold
     ) {
 
-        TextView view = new TextView(this);
+        TextView view =
+                new TextView(this);
 
         view.setText(value);
+
         view.setTextSize(size);
+
         view.setTextColor(color);
 
         if (bold) {
+
             view.setTypeface(
                     Typeface.DEFAULT,
                     Typeface.BOLD
@@ -1099,7 +1023,22 @@ public class MainActivity extends Activity {
         return view;
     }
 
-    private LinearLayout.LayoutParams marginParams(
+    private GradientDrawable rounded(
+            int color,
+            int radius
+    ) {
+
+        GradientDrawable drawable =
+                new GradientDrawable();
+
+        drawable.setColor(color);
+
+        drawable.setCornerRadius(radius);
+
+        return drawable;
+    }
+
+    private LinearLayout.LayoutParams margins(
             int left,
             int top,
             int right,
@@ -1141,7 +1080,7 @@ public class MainActivity extends Activity {
                     Toast.LENGTH_SHORT
             ).show();
 
-            showNowPlaying(song);
+            showPlayer(song);
 
         } else {
 
@@ -1153,5 +1092,184 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void showNowPlay
-    # MELORA currently does not require custom ProGuard rules.
+    private void showPlayer(Song song) {
+
+        if (nowPlayingTitle == null) {
+
+            LinearLayout player =
+                    new LinearLayout(this);
+
+            player.setGravity(
+                    Gravity.CENTER_VERTICAL
+            );
+
+            player.setPadding(
+                    15,
+                    5,
+                    8,
+                    5
+            );
+
+            player.setBackgroundColor(
+                    Color.rgb(20, 20, 23)
+            );
+
+            LinearLayout info =
+                    new LinearLayout(this);
+
+            info.setOrientation(
+                    LinearLayout.VERTICAL
+            );
+
+            nowPlayingTitle =
+                    text(
+                            song.title,
+                            14,
+                            WHITE,
+                            true
+                    );
+
+            nowPlayingArtist =
+                    text(
+                            song.artist,
+                            11,
+                            GRAY,
+                            false
+                    );
+
+            info.addView(
+                    nowPlayingTitle
+            );
+
+            info.addView(
+                    nowPlayingArtist
+            );
+
+            player.addView(
+                    info,
+                    new LinearLayout.LayoutParams(
+                            0,
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            1
+                    )
+            );
+
+            playButton =
+                    new Button(this);
+
+            playButton.setText("❚❚");
+
+            playButton.setTextColor(WHITE);
+
+            playButton.setTextSize(18);
+
+            playButton.setBackgroundColor(
+                    Color.TRANSPARENT
+            );
+
+            playButton.setOnClickListener(
+                    v -> {
+
+                        playing = !playing;
+
+                        playButton.setText(
+                                playing
+                                        ? "❚❚"
+                                        : "▶"
+                        );
+                    }
+            );
+
+            player.addView(
+                    playButton,
+                    new LinearLayout.LayoutParams(
+                            55,
+                            55
+                    )
+            );
+
+            root.addView(
+                    player,
+                    root.indexOfChild(content)
+            );
+        }
+
+        nowPlayingTitle.setText(
+                song.title
+        );
+
+        nowPlayingArtist.setText(
+                song.artist
+        );
+
+        playButton.setText("❚❚");
+    }
+
+    private static class Song {
+
+        String title;
+        String artist;
+        String genre;
+
+        Song(
+                String title,
+                String artist,
+                String genre
+        ) {
+
+            this.title = title;
+            this.artist = artist;
+            this.genre = genre;
+        }
+    }
+}
+name: Build MELORA APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-35"
+          sdkmanager "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build MELORA
+        run: |
+          gradle clean assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MELORA-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
